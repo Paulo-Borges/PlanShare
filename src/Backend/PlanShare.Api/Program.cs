@@ -12,8 +12,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-builder.Services.AddOpenApi();
-
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(config =>
@@ -63,8 +61,6 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -84,10 +80,12 @@ if (builder.Configuration.IsUnitTestEnviroment() == false)
 
 app.Run();
 
-public async Task MigrateDatabase()
+async Task MigrateDatabase()
 {
-    await using var scope = app.Services.CreateScope();
+    await using var scope = app.Services.CreateAsyncScope();
 
-    ]await DataBaseMigration.MigrateDatabase(scope.ServiceProvider);
+    var stringConnection = builder.Configuration.ConnectionString();
+
+    DataBaseMigration.Migrate(stringConnection, scope.ServiceProvider);
 }
 

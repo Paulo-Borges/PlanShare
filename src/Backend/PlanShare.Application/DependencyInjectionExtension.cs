@@ -25,7 +25,8 @@ public static class DependencyInjectionExtension
 
     private static void AddAutoMapper(IServiceCollection services)
     {
-        services.AddAutoMapper(typeof(AutoMapping));
+        //services.AddAutoMapper(typeof(AutoMapping).Assembly);
+        services.AddAutoMapper(cfg => { }, typeof(AutoMapping).Assembly);
     }
 
     private static void AddUseCases(IServiceCollection services)

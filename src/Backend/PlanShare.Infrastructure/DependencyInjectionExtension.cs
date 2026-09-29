@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FluentMigrator.Runner;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PlanShare.Domain.Repositories;
@@ -11,6 +12,7 @@ using PlanShare.Domain.Services.LoggedUser;
 using PlanShare.Infrastructure.DataAccess;
 using PlanShare.Infrastructure.DataAccess.Repositories;
 using PlanShare.Infrastructure.Extensions;
+using PlanShare.Infrastructure.Migrations;
 using PlanShare.Infrastructure.Security.Cryptography;
 using PlanShare.Infrastructure.Security.Tokens.Access.Generator;
 using PlanShare.Infrastructure.Security.Tokens.Access.Validator;
@@ -26,6 +28,7 @@ public static class DependencyInjectionExtension
         AddTokenHandlers(services, configuration);
         AddPasswordEncripter(services);
         AddDbContext(services, configuration);
+        AddDatabaseMigrations(services, configuration);
     }
 
     private static void AddDbContext(IServiceCollection services, IConfiguration configuration)
@@ -36,6 +39,19 @@ public static class DependencyInjectionExtension
         {
             dbContextOptions.UseSqlServer(connectionString);
         });
+    }
+
+    private static void AddDatabaseMigrations(IServiceCollection services, IConfiguration configuration)
+    {
+        var connectionString = configuration.ConnectionString();
+
+        services
+            .AddFluentMigratorCore()
+            .ConfigureRunner(runner => runner
+                .AddSqlServer()
+                .WithGlobalConnectionString(connectionString)
+                .ScanIn(typeof(DataBaseMigration).Assembly).For.Migrations())
+            .AddLogging(logging => logging.AddFluentMigratorConsole());
     }
 
     private static void AddRepositories(IServiceCollection services)
